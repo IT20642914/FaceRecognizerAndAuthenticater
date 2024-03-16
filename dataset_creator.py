@@ -101,8 +101,6 @@ def apply_augmentations_keras(image):
 
 # Get video file path and user information
 video_path = '20240312_104654.mp4'  # Update this path as necessary
-name = 'avishka'
-id = '1'
 
 # Open the video file
 video_capture = cv2.VideoCapture(video_path)
@@ -134,10 +132,10 @@ while sample_faces < 450:
             augmented_image = apply_augmentations_keras(face_image.copy())
             
             # Save original and augmented face images in color
-            face_save_path = os.path.join('data/authorized', f'{id}.{sample_faces}.{name}_face.jpg')
+            face_save_path = os.path.join('Data/Dataset', f'{id}.{sample_faces}._face.jpg')
             cv2.imwrite(face_save_path, face_image)
             
-            augmented_save_path = os.path.join('data/authorized', f'{id}.{sample_faces}.{name}_augmented.jpg')
+            augmented_save_path = os.path.join('Data/Dataset', f'{id}.{sample_faces}._augmented.jpg')
             cv2.imwrite(augmented_save_path, augmented_image)
             
             # Optional visualization
