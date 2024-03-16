@@ -6,3 +6,4 @@ pip install scikit-learn
 pip install Pillow
 
 $ pip install deepface
+pip install  pyttsx3  
