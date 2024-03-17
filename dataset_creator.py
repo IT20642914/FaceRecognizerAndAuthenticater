@@ -72,7 +72,7 @@ if len(all_images) == 0:
     print("No images were saved to the dataset. Please check the video file and face detection.")
 else:
     # Proceed with splitting the dataset
-    train_images, validation_images = train_test_split(all_images, test_size=0.1, random_state=42)
+    train_images, validation_images = train_test_split(all_images, test_size=0.05, random_state=42)
 
     # Create folders for recognition and verification data
     recognition_data_folder = 'Data/RecognitionData'

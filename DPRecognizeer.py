@@ -9,7 +9,9 @@ from firebase_admin import credentials
 from firebase_admin import db
 from flask import Flask, request, jsonify
 import threading
-
+import threading
+import requests
+import numpy as np
 
 app = Flask(__name__)
 
@@ -103,9 +105,8 @@ def process_frame(frame, face_cascade, face_detected_time=None):
     if faces is not None and len(faces) > 0:
         if face_detected_time is None:
             face_detected_time = current_time
-
         for (x, y, w, h) in faces:
-            if current_time - face_detected_time >= 2:  # If face has been recognized continuously for at least 2 seconds
+            if current_time - face_detected_time >= 3:  # If face has been recognized continuously for at least 3 seconds
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
                 cropped_face = frame[y:y+h, x:x+w]
                 temp_face_path = "Data/InputImage/authorized_user.jpg"
@@ -140,37 +141,45 @@ def process_frame(frame, face_cascade, face_detected_time=None):
 
     cv2.imshow('Camera Output', frame)
     return False, face_detected_time
-stream_url = 'http://192.168.43.189:8080/?action=stream'
-def main_loop():
-    cap = cv2.VideoCapture(stream_url)
-    if not cap.isOpened():
-        print("Error: Could not open video capture.")
-        exit()
 
+
+stream_url = 'http://192.168.43.189:8080/?action=stream'
+
+def fetch_and_decode_mjpeg(stream_url):
+    stream = requests.get(stream_url, stream=True)
+    bytes = b''
+    for chunk in stream.iter_content(chunk_size=1024):
+        bytes += chunk
+        a = bytes.find(b'\xff\xd8')  # Start of JPEG image
+        b = bytes.find(b'\xff\xd9')  # End of JPEG image
+        if a != -1 and b != -1:
+            jpg = bytes[a:b+2]  # Extract the JPEG image bytes
+            bytes = bytes[b+2:]  # Remove the processed frame from the buffer
+            image = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)  # Convert JPEG bytes to an OpenCV image
+            if image is not None:
+                yield image        
+        
+
+def main_loop():
+    
+    stream_url = 'http://192.168.43.189:8080/?action=stream'
     speak("Initiating face recognition protocol. Kindly direct your gaze towards the drone's camera for verification. Please remain still during the process.")
 
     face_detected_time = None
-    try:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                print("Failed to capture frame from camera. Exiting...")
-                break
+    for frame in fetch_and_decode_mjpeg(stream_url):
+        # Process each frame (same logic as before)
+        IsSTopTrue, face_detected_time = process_frame(frame, face_cascade, face_detected_time)
+        if(IsSTopTrue):
+            break
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    cv2.destroyAllWindows()
 
-            IsSTopTrue, face_detected_time = process_frame(frame, face_cascade, face_detected_time)
-            if(IsSTopTrue):
-                break
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-    finally:
-        cap.release()
-        cv2.destroyAllWindows()
 
 
 def start_face_recognition():
     main_loop()
-    
+ 
 @app.route('/start_recognition', methods=['GET'])
 def trigger_face_recognition():
     # Using a thread to run the face recognition process to avoid blocking Flask's main thread
@@ -179,4 +188,4 @@ def trigger_face_recognition():
     return jsonify({"message": "Face recognition process started."})
 
 if __name__ == "__main__":
-     app.run(debug=True, port=5000) # Run the Flask app on port 5000
+     app.run(host=('0.0.0.0'), port=5000) # Run the Flask app on port 5000

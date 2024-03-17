@@ -1,0 +1,8 @@
+opencv-contrib-python
+tensorflow
+scikit-learn
+Pillow
+deepface
+pyttsx3
+firebase_admin
+flask
