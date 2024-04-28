@@ -9,7 +9,6 @@ from firebase_admin import credentials
 from firebase_admin import db
 from flask import Flask, request, jsonify
 import threading
-import threading
 import requests
 import numpy as np
 
@@ -67,7 +66,7 @@ def verify_target_against_folder(target_image_path, verification_folder_path):
     if distances:
         average_distance = sum(distances) / len(distances)
         print(f"Average Distance: {average_distance}")
-        if(average_distance < 0.4):
+        if(average_distance < 0.5):
             print("Authorized user detected based on average distance.")
             return True  
         else:
@@ -188,4 +187,4 @@ def trigger_face_recognition():
     return jsonify({"message": "Face recognition process started."})
 
 if __name__ == "__main__":
-     app.run(host=('0.0.0.0'), port=5000) # Run the Flask app on port 5000
+     app.run(host=('0.0.0.0'), port=6006) # Run the Flask app on port 5000
