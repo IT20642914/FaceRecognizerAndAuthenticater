@@ -6,5 +6,4 @@
 
 # Ignore MP4 video files
 *.mp4
-
-*private_key.json
+private_key.json
